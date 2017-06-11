@@ -90,22 +90,15 @@ labelFile.close()
 # load images
 images = []
 for i, label in enumerate(image_labels):
-    # with open('Images/' + label[0], 'rb') as in_file:
-    #     data = in_file.read()
-    # img = np.fromstring(data, dtype='uint8')
-
     imgFile = Image.open(os.path.join(baseImageDir, label[0]))
     # if imgFile.mode != "RGB":
     #     imgFile = imgFile.convert("RGB")
 
-    # data = imgFile.getdata()
-    # img = np.array(data,  dtype=np.object)
+    data = imgFile.getdata()
+    img = np.array(data,  dtype=np.object)
     imgUInt8 = np.array(imgFile,  dtype=np.uint8)
-    # img = np.fromstring(imgFile.tobytes(), dtype=np.uint8)
 
-
-    # [label[1][0]]
-    images.append(imgFile)
+    images.append(img)
     images_with_boxes = draw_boxes(imgUInt8 , [label[1][1].split(' ')], [0] , [labelList[label[1][0]]])
 
     # Save the image:
