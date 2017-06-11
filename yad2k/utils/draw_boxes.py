@@ -5,7 +5,7 @@ import random
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
-
+import os
 
 def get_colors_for_classes(num_classes):
     """Return list of random colors for number of classes given."""
@@ -35,7 +35,7 @@ def draw_boxes(image, boxes, box_classes, class_names, scores=None):
         image: An `array` of shape (width, height, 3) with values in [0, 1].
         boxes: An `array` of shape (num_boxes, 4) containing box corners as
             (y_min, x_min, y_max, x_max).
-        box_classes: A `list` of indicies into `class_names`.
+        box_classes: A `list` of indices into `class_names`.
         class_names: A `list` of `string` class names.
         `scores`: A `list` of scores for each box.
 
@@ -43,6 +43,12 @@ def draw_boxes(image, boxes, box_classes, class_names, scores=None):
         A copy of `image` modified with given bounding boxes.
     """
     image = Image.fromarray(np.floor(image * 255 + 0.5).astype('uint8'))
+
+    if image.mode != "RGB":
+        image = image.convert("RGB")
+
+
+    print(os.getcwd())
 
     font = ImageFont.truetype(
         font='font/FiraMono-Medium.otf',
@@ -64,10 +70,10 @@ def draw_boxes(image, boxes, box_classes, class_names, scores=None):
         label_size = draw.textsize(label, font)
 
         top, left, bottom, right = box
-        top = max(0, np.floor(top + 0.5).astype('int32'))
-        left = max(0, np.floor(left + 0.5).astype('int32'))
-        bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
-        right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
+        top = max(0, np.floor(float(top) + 0.5).astype('int32'))
+        left = max(0, np.floor(float(left) + 0.5).astype('int32'))
+        bottom = min(image.size[1], np.floor(float(bottom) + 0.5).astype('int32'))
+        right = min(image.size[0], np.floor(float(right) + 0.5).astype('int32'))
         print(label, (left, top), (right, bottom))
 
         if top - label_size[1] >= 0:

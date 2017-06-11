@@ -26,7 +26,7 @@ argparser.add_argument(
     '-d',
     '--data_path',
     help="path to numpy data file (.npz) containing np.object array 'boxes' and np.uint8 array 'images'",
-    default=os.path.join('..', 'DATA', 'underwater_data.npz'))
+    default=os.path.join('..', 'DATA','underwater_data.npz'))
 
 argparser.add_argument(
     '-a',
