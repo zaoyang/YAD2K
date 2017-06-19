@@ -1,10 +1,5 @@
 '''
-    This program packages the labels and images
-from the underwater dataset and converts them
-to an hdf5 database file.m
-
-    Thanks, Thomas, for labeling all of those images.
-        -shadySource
+   Converts labels from LabelmMe program and converts it to hd5 file
 '''
 import os
 import sys
@@ -13,6 +8,7 @@ import numpy as np
 from xml.dom import minidom
 from yad2k.utils.draw_boxes import draw_boxes
 from PIL import Image
+import numpy
 
 debug = True #only load 10 images
 
@@ -26,32 +22,34 @@ imageOutPath = 'images/out/'
 
 
 image_labels = []
-labelFile = open("labels", "w")
 labelList = []
-box_classes = []
+numFile = 0
 
 os.chdir('..')
 
-labelNum = 0
 for i, dirName in enumerate(os.listdir(baseAnnotationDir)):
     fullDirPath = baseAnnotationDir + "/" + dirName
     # print(fullDirPath)
 
     if os.path.isdir(fullDirPath):
-        for j, filename in enumerate(os.listdir(fullDirPath)):
+        for filename in os.listdir(fullDirPath):
             xmldoc = minidom.parse(fullDirPath + "/" + filename)
             elements = xmldoc.getElementsByTagName('filename')
 
             # get the file names
             fullPath = dirName + "/" + elements[0].firstChild.nodeValue
-            # print(fullPath)
-
+            image_labels.append([fullPath])
             objElements = xmldoc.getElementsByTagName('object')
+            print()
+            print(fullPath)
+            print("numFile: " + str(numFile))
 
             # There are many points. Turn it into a rectangle
             # Get the lowest x, y and the highest x, y
-            for obj in objElements:
+            for k, obj in enumerate(objElements):
                 objName = obj.getElementsByTagName('name')[0].firstChild.nodeValue
+                objName = objName.replace(',', '')
+                print(objName)
 
                 xElements = obj.getElementsByTagName('polygon')[0].getElementsByTagName('x')
 
@@ -64,48 +62,57 @@ for i, dirName in enumerate(os.listdir(baseAnnotationDir)):
                 for e in xElements:
                     yList.append(e.firstChild.nodeValue)
 
-            xmin = min(xList)
-            xmax = max(xList)
-            ymin = min(xList)
-            ymax = max(xList)
-
-            objName = objName.replace(',','')
-            labelFile.write(objName + "\n")
+                xmin = min(xList)
+                xmax = max(xList)
+                ymin = min(xList)
+                ymax = max(xList)
 
 
-            image_labels.append([fullPath, [labelNum,  xmin + " " + ymin + " " + xmax + " " + ymax]])
-            box_classes.append(labelNum)
-            labelList.append(objName)
-            labelNum = labelNum+1
 
+                if objName not in labelList:
+                    labelList.append(objName)
+                    labelNum = labelList.index(objName)
+                else:
+                    labelNum = labelList.index(objName)
 
-            if DEBUG and j == 5:
+                image_labels[numFile].append([labelNum, xmin, ymin, xmax, ymax])
+
+            numFile += 1
+
+            if DEBUG and numFile == 5:
                 break
     if DEBUG and i == 1:
         break
 
+
+#
+labelFile = open("label", "w")
+for i, value in enumerate(labelList):
+    labelFile.write(str(i) + " , " + str(value))
 labelFile.close()
 # convert
 
 # load images
 images = []
-for i, label in enumerate(image_labels):
-    imgFile = Image.open(os.path.join(baseImageDir, label[0]))
-    # if imgFile.mode != "RGB":
-    #     imgFile = imgFile.convert("RGB")
+for i, labels in enumerate(image_labels):
+    imgName = labels.pop(0)
+    imgFile = Image.open(os.path.join(baseImageDir, imgName))
 
     data = imgFile.getdata()
     img = np.array(data,  dtype=np.object)
     imgUInt8 = np.array(imgFile,  dtype=np.uint8)
 
     images.append(img)
-    images_with_boxes = draw_boxes(imgUInt8 , [label[1][1].split(' ')], [0] , [labelList[label[1][0]]])
+    boxes = [box[1:] for box in labels]
+    box_classes = [box[0] for box in labels]
+
+    images_with_boxes = draw_boxes(imgUInt8, boxes, box_classes, labelList)
 
     # Save the image:
     image = Image.fromarray(images_with_boxes)
-    print("Image saved" + str(label[0]))
+    # print("Image saved" + str(label[0]))
 
-    image.save(os.path.join(imageOutPath, str(label[0])), 'PNG' )
+    image.save(os.path.join(imageOutPath, str(imgName)), 'PNG' )
 
     if DEBUG and i == 30:
         break
@@ -118,17 +125,9 @@ images = [pair[0] for pair in imageWithLabel]
 image_labels = [pair[1] for pair in imageWithLabel]
 
 
-# images = images[0:2]
-# for img in images:
-#     print(img)
-#     print(type(img))
-#     print("------------")
-
-# exit()
-
 #convert to numpy for saving
 images = np.asarray(images)
-image_labels = [np.array(i[1:]) for i in image_labels]# remove the file names
+image_labels = [np.array(image_label[1:]) for image_label in image_labels]# remove the file names
 image_labels = np.array(image_labels)
 
 #save dataset

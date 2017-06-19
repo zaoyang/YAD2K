@@ -115,7 +115,8 @@ def process_data(images, boxes=None):
 
     if boxes is not None:
         # Box preprocessing.
-        # Original boxes stored as 1D list of class, x_min, y_min, x_max, y_max.
+        # Original boxes stored as 1D list of [class, x_min, y_min, x_max, y_max]
+
         boxes = [box.reshape((-1, 5)) for box in boxes]
         # Get extents as y_min, x_min, y_max, x_max, class for comparision with
         # model output.
