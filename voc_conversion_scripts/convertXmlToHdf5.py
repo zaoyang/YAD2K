@@ -19,10 +19,10 @@ debug = False #only load 10 images
 DEBUG = False
 
 
-baseAnnotationDir = '/home/ubuntu/Code/LabelMeAnnotationTool/Annotations'
-baseImageDir = '/home/ubuntu/Code/LabelMeAnnotationTool/Images'
-#baseAnnotationDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Annotations'
-#baseImageDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Images'
+# baseAnnotationDir = '/home/ubuntu/Code/LabelMeAnnotationTool/Annotations'
+# baseImageDir = '/home/ubuntu/Code/LabelMeAnnotationTool/Images'
+baseAnnotationDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Annotations'
+baseImageDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Images'
 imageOutPath = 'images/out/'
 
 
@@ -100,19 +100,15 @@ labelFile = open("label", "w")
 for i, value in enumerate(labelList):
     labelFile.write(str(i) + " , " + str(value))
 labelFile.close()
-# convert
 
 # load images
 images = []
 for i, labels in enumerate(image_labels):
     imgName = labels.pop(0)
     imgFile = Image.open(os.path.join(baseImageDir, imgName))
-
-    data = imgFile.getdata()
-    img = np.array(data,  dtype=np.object)
     imgUInt8 = np.array(imgFile,  dtype=np.uint8)
 
-    images.append(img)
+    images.append(imgUInt8)
     boxes = [box[1:] for box in labels]
     box_classes = [box[0] for box in labels]
 
@@ -120,7 +116,6 @@ for i, labels in enumerate(image_labels):
 
     # Save the image:
     image = Image.fromarray(images_with_boxes)
-    # print("Image saved: " + str(labels[0]))
 
     image.save(os.path.join(imageOutPath, str(imgName)), 'PNG' )
 
@@ -136,7 +131,7 @@ image_labels = [pair[1] for pair in imageWithLabel]
 
 
 #convert to numpy for saving
-images = np.asarray(images)
+images = np.asarray(images, dtype=np.uint8)
 image_labels = [np.array(image_label[1:]) for image_label in image_labels]# remove the file names
 image_labels = np.array(image_labels)
 
