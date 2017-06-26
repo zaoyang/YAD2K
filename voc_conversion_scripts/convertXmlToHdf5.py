@@ -17,8 +17,12 @@ debug = False #only load 10 images
 
 
 DEBUG = False
-baseAnnotationDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Annotations'
-baseImageDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Images'
+
+
+baseAnnotationDir = '/home/ubuntu/Code/LabelMeAnnotationTool/Annotations'
+baseImageDir = '/home/ubuntu/Code/LabelMeAnnotationTool/Images'
+#baseAnnotationDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Annotations'
+#baseImageDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Images'
 imageOutPath = 'images/out/'
 
 
@@ -57,8 +61,8 @@ for i, dirName in enumerate(os.listdir(baseAnnotationDir)):
                     xList = []
                     yList = []
                     for l, pt in enumerate(ptElements):
-                        x = int(pt.find('x').text)
-                        y = int(pt.find('y').text)
+                        x = int(float(pt.find('x').text))
+                        y = int(float(pt.find('y').text))
                         xList.append(x)
                         yList.append(y)
 
