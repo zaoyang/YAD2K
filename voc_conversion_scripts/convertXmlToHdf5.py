@@ -16,7 +16,7 @@ debug = False #only load 10 images
 # this is before chdir
 
 
-DEBUG = False
+DEBUG = True
 
 
 # baseAnnotationDir = '/home/ubuntu/Code/LabelMeAnnotationTool/Annotations'
@@ -82,7 +82,7 @@ for i, dirName in enumerate(os.listdir(baseAnnotationDir)):
 
             numFile += 1
 
-            if DEBUG and numFile == 5:
+            if DEBUG and numFile == 10:
                 break
     if DEBUG and i == 1:
         break
@@ -91,7 +91,7 @@ for i, dirName in enumerate(os.listdir(baseAnnotationDir)):
 #
 labelFile = open("label", "w")
 for i, value in enumerate(labelList):
-    labelFile.write(str(i) + " , " + str(value))
+    labelFile.write(str(value) + "\n")
 labelFile.close()
 
 # load images
@@ -105,13 +105,13 @@ for i, labels in enumerate(image_labels):
     boxes = [box[1:] for box in labels]
     box_classes = [box[0] for box in labels]
 
-    images_with_boxes = draw_boxes(imgUInt8, boxes, box_classes, labelList)
-
-    # Save the image:
-    image = Image.fromarray(images_with_boxes)
-
-    image.save(os.path.join(imageOutPath, str(imgName)), 'PNG' )
-    print(imageOutPath + str(imgName))
+    # images_with_boxes = draw_boxes(imgUInt8, boxes, box_classes, labelList)
+    #
+    # # Save the image:
+    # image = Image.fromarray(images_with_boxes)
+    #
+    # image.save(os.path.join(imageOutPath, str(imgName)), 'PNG' )
+    # print(imageOutPath + str(imgName))
 
     if DEBUG and i == 30:
         break
