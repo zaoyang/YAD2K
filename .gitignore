@@ -2,7 +2,7 @@
 *.h5
 *.weights
 *.cfg
-images/out/*
+images/out_polygon/*
 model_data/*_anchors.txt
 .idea/*
 
