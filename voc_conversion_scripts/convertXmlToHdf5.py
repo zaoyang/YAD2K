@@ -5,19 +5,20 @@ import os
 import sys
 import json
 import numpy as np
-from xml.dom import minidom
 from yad2k.utils.draw_boxes import draw_boxes
 from PIL import Image
 import numpy
 
-debug = True #only load 10 images
+import xml.etree.ElementTree as et
+
+debug = False #only load 10 images
 
 # this is before chdir
 
 
-DEBUG = True
-baseAnnotationDir = 'images/house/raw/Annotations'
-baseImageDir = 'images/house/raw/Images'
+DEBUG = False
+baseAnnotationDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Annotations'
+baseImageDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Images'
 imageOutPath = 'images/out/'
 
 
@@ -33,49 +34,54 @@ for i, dirName in enumerate(os.listdir(baseAnnotationDir)):
 
     if os.path.isdir(fullDirPath):
         for filename in os.listdir(fullDirPath):
-            xmldoc = minidom.parse(fullDirPath + "/" + filename)
-            elements = xmldoc.getElementsByTagName('filename')
+            xmlFile = fullDirPath + "/" + filename
+            xmldoc = et.parse(xmlFile)
+            filename = xmldoc.find('filename').text
 
             # get the file names
-            fullPath = dirName + "/" + elements[0].firstChild.nodeValue
+            fullPath = dirName + "/" + filename
             image_labels.append([fullPath])
-            objElements = xmldoc.getElementsByTagName('object')
-            print()
-            print(fullPath)
+            objElements = xmldoc.findall('object')
+            # print()
+            print(xmlFile)
             print("numFile: " + str(numFile))
 
             # There are many points. Turn it into a rectangle
             # Get the lowest x, y and the highest x, y
             for k, obj in enumerate(objElements):
-                objName = obj.getElementsByTagName('name')[0].firstChild.nodeValue
-                objName = objName.replace(',', '')
-                print(objName)
+                if (obj.find('type') is not None and obj.find('type').text == 'bounding_box'): #and filename == '0621239607d82648_3377-w500-h666-b0-p0-industrial-bathroom.jpg'
+                    objName = obj.find('name').text
+                    objName = objName.replace(',', '')
 
-                xElements = obj.getElementsByTagName('polygon')[0].getElementsByTagName('x')
+                    ptElements = obj.findall('polygon')[0].findall('pt')
+                    xList = []
+                    yList = []
+                    for l, pt in enumerate(ptElements):
+                        x = int(pt.find('x').text)
+                        y = int(pt.find('y').text)
+                        xList.append(x)
+                        yList.append(y)
 
-                xList = []
-                for e in xElements:
-                    xList.append(e.firstChild.nodeValue)
-                yElements = obj.getElementsByTagName('polygon')[0].getElementsByTagName('y')
+                    xmin = min(xList)
+                    xmax = max(xList)
+                    ymin = min(yList)
+                    ymax = max(yList)
+                    # print(objName)
+                    # print(xList)
+                    # print(str(xmin) + " " + str(xmax))
+                    # print(yList)
+                    # print(str(ymin) + " " + str(ymax))
+                    # print()
 
-                yList = []
-                for e in xElements:
-                    yList.append(e.firstChild.nodeValue)
+                    if(len(xList) == 4 and len(yList) == 4):
+                        if objName not in labelList:
+                            labelList.append(objName)
+                            labelNum = labelList.index(objName)
+                        else:
+                            labelNum = labelList.index(objName)
 
-                xmin = min(xList)
-                xmax = max(xList)
-                ymin = min(xList)
-                ymax = max(xList)
-
-
-
-                if objName not in labelList:
-                    labelList.append(objName)
-                    labelNum = labelList.index(objName)
-                else:
-                    labelNum = labelList.index(objName)
-
-                image_labels[numFile].append([labelNum, xmin, ymin, xmax, ymax])
+                        # image_labels[numFile].append([labelNum, xmin, ymin, xmax, ymax])
+                        image_labels[numFile].append([labelNum, ymax, xmin, ymin, xmax])
 
             numFile += 1
 
@@ -110,7 +116,7 @@ for i, labels in enumerate(image_labels):
 
     # Save the image:
     image = Image.fromarray(images_with_boxes)
-    # print("Image saved" + str(label[0]))
+    # print("Image saved: " + str(labels[0]))
 
     image.save(os.path.join(imageOutPath, str(imgName)), 'PNG' )
 

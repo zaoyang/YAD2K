@@ -22,9 +22,9 @@ def random_color():
     return tuple(rgbl)
 
 
-DEBUG = True
-baseAnnotationDir = 'images/house/raw/Annotations'
-baseImageDir = 'images/house/raw/Images'
+DEBUG = False
+baseAnnotationDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Annotations'
+baseImageDir = '/Users/zaoyang/Sites/LabelMeAnnotationTool/Images'
 imageOutPath = 'images/out_polygon/'
 
 
@@ -42,7 +42,9 @@ try:
 
         if os.path.isdir(fullDirPath):
             for filename in os.listdir(fullDirPath):
-                xmldoc = et.parse(fullDirPath + "/" + filename)
+                xmlFile = fullDirPath + "/" + filename
+                # print('Parsing xmlFile: ' + xmlFile)
+                xmldoc = et.parse(xmlFile)
                 filename = xmldoc.find('filename').text
 
                 # get the file names
@@ -50,31 +52,38 @@ try:
                 image_labels.append([fullPath])
 
                 objElements = xmldoc.findall('object')
-                print()
-                print(fullPath)
-                print("numFile: " + str(numFile))
+                # print()
+                # print(fullPath)
+                # print("numFile: " + str(numFile))
 
                 # There are many points. Turn it into a rectangle
                 # Get the lowest x, y and the highest x, y
                 for k, obj in enumerate(objElements):
-                    objName = obj.find('name').text
-                    objName = objName.replace(',', '')
-                    # print(objName)
 
-                    if objName not in labelList:
-                        labelList.append(objName)
-                        labelNum = labelList.index(objName)
+                    if (obj.find('type') is not None and obj.find('type').text == 'bounding_box'):
+                        objName = obj.find('name').text
+                        objName = objName.replace(',', '')
+                        # print(objName)
+
+                        if objName not in labelList:
+                            labelList.append(objName)
+                            labelNum = labelList.index(objName)
+                        else:
+                            labelNum = labelList.index(objName)
+
+                        image_labels[numFile].append([labelNum])
+
+                        ptElements = obj.findall('polygon')[0].findall('pt')
+                        for l, pt in enumerate(ptElements):
+                            x = int(pt.find('x').text)
+                            y = int(pt.find('y').text)
+                            image_labels[numFile][k+1].append((x,y))
+
+                        if(len(image_labels[numFile][k+1]) != 5):
+                            print('xml without 4 pts: ' + xmlFile)
+                            print(image_labels[numFile][k+1])
                     else:
-                        labelNum = labelList.index(objName)
-
-                    image_labels[numFile].append([labelNum])
-
-                    ptElements = obj.findall('polygon')[0].findall('pt')
-                    for l, pt in enumerate(ptElements):
-                        x = int(pt.find('x').text)
-                        y = int(pt.find('y').text)
-                        image_labels[numFile][k+1].append((x,y))
-
+                        print("File name doesn't have bounding box: " + xmlFile)
                 numFile += 1
 
                 if DEBUG and numFile == 5:
@@ -83,7 +92,7 @@ try:
             break
 
 except:
-    print ("x: ")
+
     raise
 
 
@@ -93,30 +102,33 @@ for i, value in enumerate(labelList):
 labelFile.close()
 # convert
 
-# load images
-images = []
-for i, labels in enumerate(image_labels):
-    imgName = labels.pop(0)
-    imgFile = Image.open(os.path.join(baseImageDir, imgName))
 
-    data = imgFile.getdata()
-    img = np.array(data,  dtype=np.object)
-    imgUInt8 = np.array(imgFile,  dtype=np.uint8)
+try:
+    # load images
+    images = []
+    for i, labels in enumerate(image_labels):
+        imgName = labels.pop(0)
+        imgFile = Image.open(os.path.join(baseImageDir, imgName))
 
-    images.append(img)
-    boxes = [box[1:] for box in labels]
-    box_classes = [box[0] for box in labels]
+        data = imgFile.getdata()
+        img = np.array(data,  dtype=np.object)
+        imgUInt8 = np.array(imgFile,  dtype=np.uint8)
 
+        images.append(img)
+        boxes = [box[1:] for box in labels]
+        box_classes = [box[0] for box in labels]
 
-    for label in labels:
-        drw = ImageDraw.Draw(imgFile, 'RGBA')
-        drw.polygon(label[1:], random_color())
-        del drw
-        imgFile.save(os.path.join(imageOutPath, str(imgName)), 'PNG' )
+        for label in labels:
+            if len(label) == 5:
+                drw = ImageDraw.Draw(imgFile, 'RGBA')
+                drw.polygon(label[1:], random_color())
+                del drw
 
+                print("printing: " + imageOutPath + str(imgName))
+                imgFile.save(os.path.join(imageOutPath, str(imgName)), 'PNG' )
 
-
-
-    if DEBUG and i == 30:
-        break
-
+        if DEBUG and i == 30:
+            break
+except:
+    print(label)
+    raise
