@@ -111,6 +111,7 @@ for i, labels in enumerate(image_labels):
     image = Image.fromarray(images_with_boxes)
 
     image.save(os.path.join(imageOutPath, str(imgName)), 'PNG' )
+    print(imageOutPath + str(imgName))
 
     if DEBUG and i == 30:
         break
