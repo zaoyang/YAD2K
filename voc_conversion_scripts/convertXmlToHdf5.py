@@ -48,7 +48,6 @@ for i, dirName in enumerate(os.listdir(baseAnnotationDir)):
             objElements = xmldoc.findall('object')
             # print()
             print(xmlFile)
-            print("numFile: " + str(numFile))
 
             # There are many points. Turn it into a rectangle
             # Get the lowest x, y and the highest x, y
@@ -70,12 +69,6 @@ for i, dirName in enumerate(os.listdir(baseAnnotationDir)):
                     xmax = max(xList)
                     ymin = min(yList)
                     ymax = max(yList)
-                    # print(objName)
-                    # print(xList)
-                    # print(str(xmin) + " " + str(xmax))
-                    # print(yList)
-                    # print(str(ymin) + " " + str(ymax))
-                    # print()
 
                     if(len(xList) == 4 and len(yList) == 4):
                         if objName not in labelList:
